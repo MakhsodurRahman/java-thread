@@ -41,6 +41,29 @@ class BankAccount {
     }
 
 
+    public void withdraw(double amount) {
+        long stamp = lock.readLock();
+        try {
+            if (amount <= balance) {
+                long upStamp = lock.tryConvertToWriteLock(stamp);
+                if (upStamp != 0) {
+                    stamp = upStamp;
+                    balance -= amount;
+                } else {
+                    lock.unlockRead(stamp);
+                    stamp = lock.writeLock();
+                    balance -= amount;
+                }
+            } else {
+                System.out.println("Insufficient balance");
+            }
+        } finally {
+            lock.unlock(stamp);
+        }
+
+    }
+
+
 }
 
 public class Main {
