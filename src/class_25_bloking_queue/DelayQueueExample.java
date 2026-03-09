@@ -41,9 +41,9 @@ public class DelayQueueExample {
 
         DelayQueue<MyTask> queue = new DelayQueue<>();
 
-        queue.put(new MyTask("task1", 3000,10));
-        queue.put(new MyTask("task2", 1000,20));
-        queue.put(new MyTask("task3", 5000,30));
+        queue.put(new MyTask("task1", 3000,2));
+        queue.put(new MyTask("task2", 1000,3));
+        queue.put(new MyTask("task3", 5000,1));
 
         while (!queue.isEmpty()) {
 
