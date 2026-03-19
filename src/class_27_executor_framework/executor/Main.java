@@ -8,7 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-class MakExecutorService{
+class MakExecutorService implements AutoCloseable{
 
     private static final AtomicInteger poolCount = new AtomicInteger(0);
     public final ThreadFactory factory;
@@ -49,6 +49,24 @@ class MakExecutorService{
         for (Worker worker : workers){
             worker.stop();
         }
+    }
+
+    @Override
+    public void close() throws Exception {
+        while (true){
+            boolean flag = true;
+            for (Worker worker : workers){
+                if(worker.thread.getState() == Thread.State.WAITING){
+                    flag = false;
+                    break;
+                }
+            }
+            if (flag){
+                break;
+            }
+            Thread.sleep(1000);
+        }
+        shutdown();
     }
 
 
@@ -103,15 +121,14 @@ class MakExecutorService{
 }
 
 public class Main {
-    public static void main(String[] args) throws InterruptedException {
-        MakExecutorService executor = new MakExecutorService(5);
+    public static void main(String[] args) throws Exception {
+        try(MakExecutorService executor = new MakExecutorService(5)) {
 
-        executor.execute(()->{
-            System.out.println("Simple task by :: "+Thread.currentThread().getName());
-        });
+            executor.execute(() -> {
+                System.out.println("Simple task by :: " + Thread.currentThread().getName());
+            });
+        }
 
-        Thread.sleep(100);
-        executor.shutdown();
         Thread.sleep(1000);
         System.out.println("done");
 
