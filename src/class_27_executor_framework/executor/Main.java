@@ -16,6 +16,10 @@ class MakExecutorService{
     private final Set<Worker> workers = new HashSet<>();
     private volatile boolean isShutdown = false;
 
+    public MakExecutorService(){
+        this(Runtime.getRuntime().availableProcessors());
+    }
+
     public MakExecutorService(int numOfThread) {
         this.factory = new MakThreadFactory(poolCount.incrementAndGet());
         for (int i = 0; i<numOfThread; i++){
@@ -62,7 +66,7 @@ class MakExecutorService{
             return new Thread(
                     Thread.currentThread().getThreadGroup(),
                     runnable,
-                    "pool-"+poolNumber+"-thread"+threadCount.incrementAndGet()
+                    "mak-pool-"+poolNumber+"-thread"+threadCount.incrementAndGet()
             );
         }
     }
@@ -99,4 +103,19 @@ class MakExecutorService{
 }
 
 public class Main {
+    public static void main(String[] args) throws InterruptedException {
+        MakExecutorService executor = new MakExecutorService(5);
+
+        executor.execute(()->{
+            System.out.println("Simple task by :: "+Thread.currentThread().getName());
+        });
+
+        Thread.sleep(100);
+        executor.shutdown();
+        Thread.sleep(1000);
+        System.out.println("done");
+
+
+
+    }
 }
