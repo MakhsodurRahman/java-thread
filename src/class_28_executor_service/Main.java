@@ -2,35 +2,44 @@ package class_28_executor_service;
 
 import utils.Utils;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main {
     public static void main(String[] args) {
+        AtomicInteger count = new AtomicInteger(1);
 
-        BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(10);
-        ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(2,5,10, TimeUnit.SECONDS,queue);
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                5,
+                5, 10
+                , TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(10),
+                r -> {
+                    Thread t = new Thread(r);
+                    t.setName("Worker-thread-" + count.getAndIncrement());
+                    t.setDaemon(true);
+                    return t;
+                });
 
-        for (int i = 0; i < 15; i++) {
-            poolExecutor.execute(taskFactory(i));
-        }
 
-        for (int i = 0; i < 100; i++) {
-            System.out.println(poolExecutor.getQueue().size());
-            Utils.sleep(100);
-        }
-        poolExecutor.allowCoreThreadTimeOut(true);
 
-        System.out.println("done");
+        executor.execute(() -> {
+            for (int i = 0; i < 10; i++) {
+                Utils.sleep(1000);
+                System.out.println(Thread.currentThread().getName()+ " :: "+i);
+            }
+        });
 
+        executor.execute(() -> {
+            for (int i = 0; i < 10; i++) {
+                Utils.sleep(1000);
+                System.out.println(Thread.currentThread().getName()+ " :: "+i);
+            }
+        });
+
+
+        Utils.sleep(5000);
+        System.out.println("Main done");
     }
 
-    static Runnable taskFactory(int id){
-        return () -> {
-            System.out.println("Task-"+id+" , exe by :: "+Thread.currentThread().getName());
-            Utils.sleep(5000);
-        };
-    }
 }
